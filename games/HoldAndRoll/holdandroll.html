@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Hold & Roll — Neon Slot Puzzle</title>
+  <meta name="description"
+    content="Hold & Roll is a neon-styled slot/puzzle game. Hold symbols, reroll, chase combos, and beat your high score." />
+
+  <style>
+    :root {
+      --bg0: #070816;
+      --bg1: #080b1c;
+      --stroke: #1a2a52;
+      --text: #eef4ff;
+      --muted: #a9b7d9;
+
+      --accent: #7c4dff;
+      --accent2: #4fffc6;
+      --hot: #ff4fd8;
+
+      --radius: 18px;
+      --shadow: 0 22px 60px rgba(0, 0, 0, .55);
+      --shadow2: 0 14px 40px rgba(0, 0, 0, .45);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(1200px 700px at 15% 10%, rgba(124, 77, 255, .28), transparent 60%),
+        radial-gradient(900px 500px at 85% 15%, rgba(255, 79, 216, .18), transparent 55%),
+        radial-gradient(900px 700px at 40% 90%, rgba(79, 255, 198, .12), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      color: var(--text);
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: inherit
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .bgfx {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      opacity: .22;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255, 255, 255, .6) 0 1px, transparent 2px),
+        radial-gradient(circle at 55% 30%, rgba(255, 255, 255, .45) 0 1px, transparent 2px),
+        radial-gradient(circle at 85% 20%, rgba(255, 255, 255, .55) 0 1px, transparent 2px),
+        radial-gradient(circle at 30% 70%, rgba(255, 255, 255, .45) 0 1px, transparent 2px),
+        radial-gradient(circle at 70% 85%, rgba(255, 255, 255, .35) 0 1px, transparent 2px);
+      mix-blend-mode: screen;
+      filter: blur(.2px);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(6, 8, 18, .55);
+      border-bottom: 1px solid rgba(26, 42, 82, .65);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logoMark {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: url("../../assets/hold-and-roll-icon.png") center / cover no-repeat;
+      border: 1px solid rgba(255, 255, 255, .18);
+      box-shadow: 0 10px 30px rgba(124, 77, 255, .25);
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    .brandText {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.05;
+    }
+
+    .brandText strong {
+      font-size: 14px;
+      letter-spacing: .4px;
+    }
+
+    .brandText span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .navlinks {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      text-decoration: none;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 42, 82, .65);
+      background: rgba(11, 20, 44, .25);
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .pill:hover {
+      transform: translateY(-1px);
+      border-color: rgba(124, 77, 255, .55);
+      background: rgba(124, 77, 255, .10);
+      color: var(--text);
+    }
+
+    .cta {
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 12px;
+      border-radius: 999px;
+      color: #081022;
+      background: linear-gradient(90deg, var(--accent2), #8afcff);
+      box-shadow: 0 16px 40px rgba(79, 255, 198, .22);
+      border: 1px solid rgba(255, 255, 255, .22);
+      transition: transform .15s ease, filter .15s ease;
+      white-space: nowrap;
+    }
+
+    .cta:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .hero {
+      padding: 62px 0 18px;
+      position: relative;
+    }
+
+    .heroGrid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+      letter-spacing: .4px;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 42, 82, .65);
+      background: rgba(11, 20, 44, .30);
+    }
+
+    .tag i {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--hot), var(--accent2));
+      box-shadow: 0 0 0 5px rgba(255, 79, 216, .10);
+    }
+
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(34px, 4.4vw, 56px);
+      line-height: 1.04;
+      letter-spacing: -0.7px;
+    }
+
+    .sub {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 56ch;
+    }
+
+    .ctaRow {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(26, 42, 82, .75);
+      background: rgba(11, 20, 44, .35);
+      color: var(--text);
+      box-shadow: var(--shadow2);
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 79, 216, .45);
+      background: rgba(255, 79, 216, .08);
+    }
+
+    .btnPrimary {
+      color: #081022;
+      background: linear-gradient(90deg, var(--hot), var(--accent));
+      border: 1px solid rgba(255, 255, 255, .18);
+      box-shadow: 0 18px 46px rgba(255, 79, 216, .22);
+    }
+
+    .btnPrimary:hover {
+      background: linear-gradient(90deg, #ff63e0, #8a63ff);
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: rgba(169, 183, 217, .85);
+    }
+
+    .card {
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(11, 20, 44, .55), rgba(10, 17, 38, .35));
+      border: 1px solid rgba(26, 42, 82, .75);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+      padding: 18px;
+    }
+
+    .miniTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .miniTitle {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .35px;
+    }
+
+    .miniBadge {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      background: rgba(124, 77, 255, .10);
+      color: var(--muted);
+    }
+
+    .miniList {
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .miniItem {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(26, 42, 82, .65);
+      background: rgba(7, 13, 27, .35);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      margin-top: 4px;
+      background: linear-gradient(90deg, var(--accent2), var(--hot));
+      box-shadow: 0 0 0 5px rgba(79, 255, 198, .12);
+      flex: 0 0 auto;
+    }
+
+    .miniItem strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .miniItem span {
+      display: block;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    section {
+      padding: 22px 0;
+    }
+
+    .sectionTitle {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .sectionTitle h2 {
+      margin: 0;
+      font-size: clamp(22px, 2.6vw, 30px);
+      letter-spacing: -.3px;
+    }
+
+    .sectionTitle p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 60ch;
+      font-size: 14px;
+    }
+
+    /* iPhone landscape mockups */
+    .phonesStage {
+      border-radius: 26px;
+      border: 1px solid rgba(26, 42, 82, .75);
+      background:
+        radial-gradient(600px 260px at 20% 10%, rgba(255, 79, 216, .10), transparent 60%),
+        radial-gradient(520px 240px at 85% 30%, rgba(79, 255, 198, .10), transparent 60%),
+        linear-gradient(180deg, rgba(11, 20, 44, .25), rgba(8, 10, 22, .25));
+      box-shadow: var(--shadow);
+      padding: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phonesStage:before {
+      content: "";
+      position: absolute;
+      inset: -120px -120px auto auto;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(124, 77, 255, .25), transparent 60%);
+      filter: blur(10px);
+      opacity: .7;
+      pointer-events: none;
+      transform: translate(40px, -10px);
+    }
+
+    .phonesWrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .iphone {
+      position: relative;
+      border-radius: 34px;
+      padding: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .04));
+      border: 1px solid rgba(255, 255, 255, .14);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .60);
+      overflow: hidden;
+      transform-origin: center;
+    }
+
+    .iphone.left {
+      transform: rotate(-3deg) translateY(2px);
+    }
+
+    .iphone.right {
+      transform: rotate(3deg) translateY(2px);
+    }
+
+    .iphone:before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 36px;
+      background: linear-gradient(90deg, rgba(255, 79, 216, .55), rgba(124, 77, 255, .35), rgba(79, 255, 198, .45));
+      opacity: .22;
+      filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .iphone:after {
+      content: "";
+      position: absolute;
+      left: -3px;
+      top: 22%;
+      width: 6px;
+      height: 56%;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, .06);
+      box-shadow: 0 120px 0 rgba(255, 255, 255, .05);
+      opacity: .65;
+      pointer-events: none;
+    }
+
+    .screen {
+      position: relative;
+      border-radius: 26px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, .55);
+      border: 1px solid rgba(26, 42, 82, .9);
+      aspect-ratio: 19.5 / 9;
+    }
+
+    .screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scale(1.01);
+    }
+
+    .island {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 46px;
+      height: 120px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .75);
+      border: 1px solid rgba(255, 255, 255, .08);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .island:before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      background: radial-gradient(circle at 30% 30%, rgba(124, 77, 255, .8), rgba(0, 0, 0, .2));
+      opacity: .9;
+    }
+
+    .glass {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, .10), transparent 35%),
+        radial-gradient(700px 240px at 30% 20%, rgba(255, 255, 255, .08), transparent 60%);
+      mix-blend-mode: screen;
+      opacity: .35;
+    }
+
+    .phoneLabel {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chip {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 42, 82, .75);
+      background: rgba(11, 20, 44, .35);
+      color: rgba(238, 244, 255, .9);
+      white-space: nowrap;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .fcard {
+      padding: 14px 14px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(26, 42, 82, .75);
+      background: rgba(11, 20, 44, .30);
+      box-shadow: var(--shadow2);
+    }
+
+    .fcard strong {
+      display: block;
+      margin-bottom: 6px;
+      letter-spacing: .2px;
+    }
+
+    .fcard p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+
+    footer {
+      padding: 26px 0 46px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .footerRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-top: 1px solid rgba(26, 42, 82, .75);
+      padding-top: 16px;
+    }
+
+    .footerLinks {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .footerLinks a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 42, 82, .65);
+      background: rgba(11, 20, 44, .25);
+    }
+
+    .footerLinks a:hover {
+      color: var(--text);
+      border-color: rgba(124, 77, 255, .55);
+      background: rgba(124, 77, 255, .10);
+    }
+
+    @media (max-width: 980px) {
+      .heroGrid {
+        grid-template-columns: 1fr;
+      }
+
+      .phonesWrap {
+        grid-template-columns: 1fr;
+      }
+
+      .iphone.left,
+      .iphone.right {
+        transform: none;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bgfx" aria-hidden="true"></div>
+
+  <header>
+    <div class="wrap">
+      <div class="nav">
+        <a class="brand" href="holdandroll.html" aria-label="Hold & Roll Home">
+          <div class="logoMark" aria-hidden="true"></div>
+          <div class="brandText">
+            <strong>Hold &amp; Roll</strong>
+            <span>Neon Slot Puzzle</span>
+          </div>
+        </a>
+
+        <div class="navlinks">
+          <a class="pill" href="#screens">Screens</a>
+          <a class="pill" href="#features">Features</a>
+          <a class="pill" href="privacy.html">Privacy</a>
+          <a class="pill" href="terms.html">Terms</a>
+          <a class="cta" href="#download">Get the game</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="wrap">
+      <section class="hero">
+        <div class="heroGrid">
+          <div>
+            <span class="tag"><i></i> Neon • Stars • Combos • Highscores</span>
+            <h1>Hold symbols. <br />Roll again. <br />Hit neon combos.</h1>
+            <p class="sub">
+              <strong>Hold &amp; Roll</strong> blends slot vibes with a short, tactical puzzle loop:
+              hold your symbols, reroll the rest, and chase the best possible payout.
+            </p>
+
+            <div class="ctaRow" id="download">
+              <a class="btn btnPrimary" href="#" onclick="alert('Add your store link here.'); return false;">✨ Download
+                (iOS)</a>
+              <a class="btn" href="#" onclick="alert('Add your store link here.'); return false;">⚡ Download
+                (Android)</a>
+              <a class="btn" href="#screens">📱 View screens</a>
+            </div>
+          </div>
+
+          <div class="card" aria-label="Game highlights">
+            <div class="miniTop">
+              <div class="miniBadge">1–2 min runs</div>
+            </div>
+
+            <ul class="miniList">
+              <li class="miniItem">
+                <span class="dot" aria-hidden="true"></span>
+                <div>
+                  <strong>Hold &amp; re-roll</strong>
+                  <span>Choose what to lock in — everything else rerolls.</span>
+                </div>
+              </li>
+              <li class="miniItem">
+                <span class="dot" aria-hidden="true"></span>
+                <div>
+                  <strong>Paytable &amp; Wilds</strong>
+                  <span>Clear combos, multipliers, and special wild slots.</span>
+                </div>
+              </li>
+              <li class="miniItem">
+                <span class="dot" aria-hidden="true"></span>
+                <div>
+                  <strong>Clean UX</strong>
+                  <span>Neon UI, fast rounds, and instant feedback.</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="screens">
+        <div class="sectionTitle">
+          <div>
+            <h2>In-Game Preview</h2>
+          </div>
+        </div>
+
+        <div class="phonesStage">
+          <div class="phonesWrap">
+            <div>
+              <div class="iphone left" aria-label="iPhone landscape mockup with main menu">
+                <div class="screen">
+                  <img src="MainMenuLogo.png" alt="Hold & Roll — Main Menu Screen (Landscape)" />
+                  <div class="island" aria-hidden="true"></div>
+                  <div class="glass" aria-hidden="true"></div>
+                </div>
+              </div>
+              <div class="phoneLabel">
+                <span>Main Menu</span>
+                <span class="chip">Neon / Space</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="iphone right" aria-label="iPhone landscape mockup with paytable">
+                <div class="screen">
+                  <img src="PaytableFinal.png" alt="Hold & Roll — Paytable Screen (Landscape)" />
+                  <div class="island" aria-hidden="true"></div>
+                  <div class="glass" aria-hidden="true"></div>
+                </div>
+              </div>
+              <div class="phoneLabel">
+                <span>Paytable</span>
+                <span class="chip">Combos &amp; Multipliers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="features" id="features">
+          <div class="fcard">
+            <strong>Strategic &amp; fast</strong>
+            <p>Quick sessions with real choices: what to hold, what to risk?</p>
+          </div>
+          <div class="fcard">
+            <strong>Neon style</strong>
+            <p>Space/arcade vibes with high contrast and clean readability.</p>
+          </div>
+          <div class="fcard">
+            <strong>Fair &amp; transparent</strong>
+            <p>The paytable is right in the game — you always know what’s possible.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="footerRow">
+          <div>© <span id="year"></span> Hold &amp; Roll</div>
+          <div class="footerLinks">
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms &amp; Conditions</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById("year").textContent = String(new Date().getFullYear());
+  </script>
+</body>
+
+</html>
